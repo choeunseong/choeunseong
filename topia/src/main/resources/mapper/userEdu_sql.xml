@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu">
+	<resultMap type="UserVo.UserInfoEduVo" id="eduMap">
+		<result column="EDU_IDX" property="eduIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="EDU_SCHOOL_NAME" property="eduSchoolName"/>
+		<result column="EDU_STATUS" property="eduStatus"/>
+		<result column="EDU_YEAR" property="eduYear"/>
+		<result column="EDU_MONTH" property="eduMonth"/>
+	</resultMap>
+	
+	<insert id="eduInsert" parameterType="UserVo.UserInfoEduVo">
+		insert into USER_INFO_EDU(EDU_IDX
+								 ,USER_IDX
+								 ,EDU_SCHOOL_NAME
+								 ,EDU_STATUS
+								 ,EDU_YEAR
+								 ,EDU_MONTH
+								 )
+						VALUES(
+								(select NVL(MAX(EDU_IDX), 0)+1 from user_info_edu)
+							   ,#{userIdx}
+							   ,#{eduSchoolName}
+							   ,#{eduStatus}
+							   ,#{eduYear}
+							   ,#{eduMonth}
+							  )
+	</insert>
+	
+	<select id="getEduDetailList" parameterType="int" resultMap="eduMap">
+		SELECT
+			EDU_SCHOOL_NAME
+			,EDU_STATUS
+			,EDU_YEAR
+			,EDU_MONTH
+		FROM
+			user_info_edu
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="eduDelete" parameterType="int">
+		delete from USER_INFO_EDU WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="eduUpdate" parameterType="UserVo.UserInfoEduVo">
+		update USER_INFO_EDU set EDU_SCHOOL_NAME = #{eduSchoolName}
+                        ,EDU_STATUS = #{eduStatus}
+                        ,EDU_YEAR = #{eduYear}
+                        ,EDU_MONTH = #{eduMonth}
+                    WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+

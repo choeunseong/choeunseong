@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="userHis">
+	<resultMap type="UserVo.UserInfoVo" id="userInfo">
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="USER_REGISTER_DATE" property="userRegisterDate"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="USER_SOCIAL_SECUNUM" property="userSocialSecunum"/>
+		<result column="USER_SEX" property="userSex"/>
+		<result column="USER_COMP" property="userComp"/>
+		<result column="USER_COMP_ENTERDATE" property="userCompEnterdate"/>
+		<result column="USER_DEPT" property="userDept"/>
+		<result column="USER_SPOT" property="userSpot"/>
+		<result column="USER_ARMY_SERV" property="userArmyServ"/>
+		<result column="USER_MARITAL_STATUS" property="userMaritalStatus"/>
+		<result column="USER_ARMY_SERV_ENTER" property="userArmyServEnter"/>
+		<result column="USER_ARMY_SERV_LEAVE" property="userArmyServLeave"/>
+		<result column="USER_ARMY_SERV_PERIOD" property="userArmyServPeriod"/>
+		<result column="USER_TELNUM_WIRED" property="userTelnumWired"/>
+		<result column="USER_TELNUM_WIRELESS" property="userTelnumWireless"/>
+		<result column="USER_EMAIL" property="userEmail"/>
+		<result column="USER_ZIPCODE" property="userZipcode"/>
+		<result column="USER_ADDRESS" property="userAddress"/>
+		<result column="CAREER_DATE" property="careerDate"/>
+	</resultMap>
+	
+	<sql id="historyListWhere">
+		<where>
+			<if test="userListSearchPeriod != null and userListSearchPeriod != ''">
+				<choose>
+					<!-- 검색조건 이름일때 -->
+					<when test="userListSearchPeriod == 'userName'">
+						USER_NAME LIKE '%' || #{userListSearchWord} || '%'
+					</when>
+					<!-- 검색조건 회사명 -->
+					<when test="userListSearchPeriod == 'userComp'">
+						USER_COMP LIKE '%' || #{userListSearchWord} || '%'
+					</when>
+					<!-- 검색조건  부서 -->
+					<when test="userListSearchPeriod == 'userDept'">
+						USER_DEPT LIKE '%' || #{userListSearchWord} || '%'
+					</when>
+				</choose>
+			</if>
+			<if test="userCareerLength >= 1">
+               AND c.career_date >= #{userCareerLength}
+         	</if>
+            <if test="userGender != '' and userGender != null">
+               AND U.USER_SEX = #{userGender}
+            </if>
+            <if test="saveStartDate != '' and saveStartDate != null">
+            	<![CDATA[ AND USER_REGISTER_DATE >= #{saveStartDate} ]]>
+            </if>
+            <if test="saveEndDate != '' and saveEndDate != null">
+            	<![CDATA[ AND USER_REGISTER_DATE <= #{saveEndDate} ]]>
+            </if>
+            <if test="searchKeyword != '' and searchKeyword != null">
+            	AND UPPER(s.SKILL_MODEL) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            	OR UPPER(s.SKILL_OS) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            	OR UPPER(s.SKILL_LANG) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            	OR UPPER(s.SKILL_DBMS) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            	OR UPPER(s.SKILL_COMM) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            	OR UPPER(s.SKILL_TOOL) LIKE '%' || UPPER(#{searchKeyword})|| '%'
+            	OR UPPER(s.SKILL_ETC) LIKE '%' || UPPER(#{searchKeyword}) || '%'
+            </if>
+		</where>
+	</sql>
+	
+	<select id="getHistoryInfo" parameterType="UserVo.UserInfoVo" resultMap="userInfo">
+		SELECT * 
+		    FROM (
+		            SELECT ROWNUM AS RNUM, A.* 
+		                FROM (
+		                        SELECT DISTINCT u.user_idx 
+		                                       , u.user_name 
+		                                       , u.user_comp 
+		                                       , u.user_dept 
+		                                       , to_char(u.user_register_date, 'yyyy-mm-dd HH24:MI:SS') AS userRegisterDate 
+		                                       , u.user_sex 
+		                                       , c.career_date 
+		                                FROM user_info u LEFT OUTER JOIN user_info_skill s ON u.user_idx=s.user_idx 
+		                                                 LEFT OUTER JOIN (
+		                                                                    select user_idx 
+		                                                                          ,round(abs(sum((nvl(trunc(skill_startdate),sysdate) 
+		                                                                                          - nvl(trunc(skill_enddate),sysdate))/365))) as career_date 
+		                                                                        from user_info_skill 
+		                                                                    group by user_idx
+		                                                                 ) c ON s.user_idx=c.user_idx 
+		                            <include refid="historyListWhere"/>
+		                            ORDER BY user_idx DESC 
+		                        )A 
+		                <![CDATA[
+		                WHERE ROWNUM <= #{endIndex}
+		            ) 
+		    WHERE RNUM >= #{startIndex}
+		    ]]>
+	</select>
+	
+	<select id="getHistoryInfoCnt" resultType="int">
+      SELECT 
+         COUNT(DISTINCT u.user_idx)
+      FROM 
+         user_info u
+      LEFT OUTER JOIN 
+         user_info_skill s
+      ON u.user_idx=s.user_idx
+         LEFT OUTER JOIN 
+            (select 
+               user_idx
+               ,round(abs(sum((nvl(trunc(skill_startdate),sysdate) - nvl(trunc(skill_enddate),sysdate))/365))) as career_date
+            from user_info_skill group by user_idx) c        
+          ON s.user_idx=c.user_idx
+          
+      <include refid="historyListWhere"/>
+      
+   </select>
+   
+	<select id="getSkillCareerPerson" parameterType="UserVo.UserInfoVo" resultMap="userInfo">
+		select c.*
+		    from (
+		            select ROWNUM as RNUM
+		                  ,b.*
+		                from (
+		                        SELECT a.*, s.career_date
+		                            FROM user_info a left join ( 
+		                                    SELECT user_idx 
+		                                          ,nvl(round(abs(sum((trunc(skill_startdate) - trunc(skill_enddate))/365))),0) as career_date 
+		                                        FROM user_info_skill 
+		                                        GROUP BY user_idx 
+		                                  ) s on a.user_idx = s.user_idx
+		                            where s.career_date = #{careerDate}
+		                            order by a.user_idx desc
+		                     ) b
+		                <![CDATA[
+		                where ROWNUM <= #{endIndex}
+		            ) c
+		    where c.RNUM >= #{startIndex}
+		    ]]>
+	</select>
+	
+	<select id="getSkillCareerPersonCnt" parameterType="UserVo.UserInfoVo" resultType="int">
+		SELECT count(*) 
+	        FROM user_info a left join ( 
+	                SELECT user_idx 
+	                      ,nvl(round(abs(sum((trunc(skill_startdate) - trunc(skill_enddate))/365))),0) as career_date 
+	                    FROM user_info_skill 
+	                    GROUP BY user_idx 
+	              ) s on a.user_idx = s.user_idx
+	        where s.career_date = #{careerDate}
+	</select>
+   
+	<select id="userInfoSelect" parameterType="UserVo.UserInfoVo" resultMap="userInfo">
+		select USER_IDX
+		      ,to_char(USER_REGISTER_DATE, 'YYYY-MM-DD') AS USER_REGISTER_DATE
+		      ,USER_NAME
+		      ,USER_SOCIAL_SECUNUM
+		      ,USER_SEX
+		      ,USER_COMP
+		      ,to_char(USER_COMP_ENTERDATE, 'YYYY-MM-DD') AS USER_COMP_ENTERDATE
+		      ,USER_DEPT
+		      ,USER_SPOT
+		      ,USER_ARMY_SERV
+		      ,USER_MARITAL_STATUS
+		      ,to_char(USER_ARMY_SERV_ENTER, 'YYYY-MM-DD') AS USER_ARMY_SERV_ENTER
+		      ,to_char(USER_ARMY_SERV_LEAVE, 'YYYY-MM-DD') AS USER_ARMY_SERV_LEAVE
+		      ,USER_ARMY_SERV_PERIOD
+		      ,USER_TELNUM_WIRED
+		      ,USER_TELNUM_WIRELESS
+		      ,USER_EMAIL
+		      ,USER_ZIPCODE
+		      ,USER_ADDRESS
+		      from USER_INFO where USER_IDX = #{userIdx}
+	</select>
+	
+	
+	<select id="searchInfo" parameterType="UserVo.UserInfoVo" resultType="int">
+		select count(user_name) as cnt
+    		from user_info 
+    		where user_social_secunum = #{userSocialSecunum}
+	</select>
+	
+	<insert id="infoInsert" parameterType="UserVo.UserInfoVo">
+		<selectKey resultType="int" order="BEFORE" keyProperty="userIdx">
+         	select NVL(MAX(user_idx), 0)+1 as userIdx from user_info
+         </selectKey>
+		INSERT INTO user_info
+         (
+            user_idx
+            <!-- user name 필수입력사항 -->
+            ,user_name
+            <if test="userSocialSecunum != null">, user_social_secunum</if>
+            <if test="userSex != null">, user_sex</if>
+            <if test="userComp != null">, user_comp</if>
+            <if test="userCompEnterdate != null">, user_comp_enterdate</if>
+            <if test="userDept != null">, user_dept</if>
+            <if test="userSpot != null">, user_spot</if>
+            <if test="userArmyServPeriod != null">, user_army_serv_period</if>
+            <if test="userMaritalStatus != null">, user_marital_status</if>
+            <if test="userArmyServEnter != null">, user_army_serv_enter</if>
+            <if test="userArmyServLeave != null">, user_army_serv_leave</if>
+            <if test="userArmyServ != null">, user_army_serv</if>
+            <if test="userTelnumWired != null">, user_telnum_wired</if>
+            <if test="userTelnumWireless != null">, user_telnum_wireless</if>
+            <if test="userEmail != null">, user_email</if>
+            <if test="userZipcode != null">, user_zipcode</if>
+            <if test="userAddress != null">, user_address</if>
+         )
+      VALUES (
+            <!-- (select NVL(MAX(user_idx), 0)+1 from user_info) -->
+            #{userIdx}
+            <!-- user name 필수입력사항 -->
+            ,#{userName}
+            <if test="userSocialSecunum != null">, #{userSocialSecunum}</if>
+            <if test="userSex != null">, #{userSex}</if>
+            <if test="userComp != null">, #{userComp}</if>
+            <if test="userCompEnterdate != null">, #{userCompEnterdate}</if>
+            <if test="userDept != null">, #{userDept}</if>
+            <if test="userSpot != null">, #{userSpot}</if>
+            <if test="userArmyServPeriod != null">, #{userArmyServPeriod}</if>
+            <if test="userMaritalStatus != null">, #{userMaritalStatus}</if>
+            <if test="userArmyServEnter != null">, #{userArmyServEnter}</if>
+            <if test="userArmyServLeave != null">, #{userArmyServLeave}</if>
+            <if test="userArmyServ != null">, #{userArmyServ}</if>
+            <if test="userTelnumWired != null">, #{userTelnumWired}</if>
+            <if test="userTelnumWireless != null">, #{userTelnumWireless}</if>
+            <if test="userEmail != null">, #{userEmail}</if>
+            <if test="userZipcode != null">, #{userZipcode}</if>
+            <if test="userAddress != null">, #{userAddress}</if>
+         )
+	</insert>
+	
+	<update id="infoUpdate" parameterType="UserVo.UserInfoVo">
+		update USER_INFO set USER_REGISTER_DATE = to_date(sysdate, 'yy-mm-dd')
+		                    ,USER_NAME = #{userName}
+		                    ,USER_SEX = #{userSex}
+		                    ,USER_COMP = #{userComp}
+		                    ,USER_COMP_ENTERDATE = #{userCompEnterdate}
+		                    ,USER_DEPT = #{userDept}
+		                    ,USER_SPOT = #{userSpot}
+		                    ,USER_ARMY_SERV = #{userArmyServ}
+		                    ,USER_MARITAL_STATUS = #{userMaritalStatus}
+		                    ,USER_ARMY_SERV_ENTER = #{userArmyServEnter}
+		                    ,USER_ARMY_SERV_LEAVE = #{userArmyServLeave}
+		                    ,USER_ARMY_SERV_PERIOD = #{userArmyServPeriod}
+		                    ,USER_TELNUM_WIRED = #{userTelnumWired}
+		                    ,USER_TELNUM_WIRELESS = #{userTelnumWireless}
+		                    ,USER_EMAIL = #{userEmail}
+		                    ,USER_ZIPCODE = #{userZipcode}
+		                    ,USER_ADDRESS = #{userAddress}
+		            WHERE USER_IDX = #{userIdx}
+	</update>
+	
+	<!-- 연차별 인원보기 -->
+	<select id="getGroupInfo" resultType="UserVo.UserInfoVo">
+		SELECT count(s.career_date) as careerCount
+		      ,s.career_date as careerDate
+		    FROM (
+		            SELECT user_idx
+		                  ,nvl(round(abs(sum((trunc(skill_startdate) - trunc(skill_enddate))/365))),0)as career_date
+		              FROM user_info_skill
+		              GROUP BY user_idx
+		         ) s
+		      GROUP BY s.career_date
+		      ORDER BY career_date desc
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+

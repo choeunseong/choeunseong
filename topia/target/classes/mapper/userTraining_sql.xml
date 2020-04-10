@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="training">
+	<resultMap type="UserVo.UserInfoTrainingVo" id="trainingMap">
+		<result column="TRAINING_IDX" property="trainingIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="TRAINING_NAME" property="trainingName"/>
+		<result column="TRAINING_STARTDATE" property="trainingStartdate"/>
+		<result column="TRAINING_ENDDATE" property="trainingEnddate"/>
+		<result column="TRAINING_AGENCY" property="trainingAgency"/>
+	</resultMap>
+	
+	<insert id="trainingInsert" parameterType="UserVo.UserInfoTrainingVo">
+			insert into USER_INFO_TRAINING(TRAINING_IDX
+									  	 ,USER_IDX
+									  	 ,TRAINING_NAME
+									   	 ,TRAINING_STARTDATE
+									  	 ,TRAINING_ENDDATE
+									  	 ,TRAINING_AGENCY
+									 	 )
+								VALUES(
+										(select NVL(MAX(TRAINING_IDX), 0)+1 from USER_INFO_TRAINING)
+									   ,#{userIdx}
+									   ,#{trainingName}
+									   ,#{trainingStartdate}
+									   ,#{trainingEnddate}
+									   ,#{trainingAgency}
+									  )
+	</insert>
+	
+	<select id="getTrainingDetailList" parameterType="int" resultMap="trainingMap">
+		SELECT
+			TRAINING_NAME
+			,to_char(TRAINING_STARTDATE , 'yyyy-mm-dd') as TRAINING_STARTDATE
+			,to_char(TRAINING_ENDDATE   , 'yyyy-mm-dd') as TRAINING_ENDDATE
+			,TRAINING_AGENCY
+		FROM
+			user_info_training
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="trainingDelete" parameterType="int">
+		delete from USER_INFO_TRAINING WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="trainingUpdate" parameterType="UserVo.UserInfoTrainingVo">
+		update USER_INFO_TRAINING set TRAINING_NAME = #{trainingName}
+		                             ,TRAINING_STARTDATE = #{trainingStartdate}
+		                             ,TRAINING_ENDDATE = #{trainingEnddate}
+		                             ,TRAINING_AGENCY = #{trainingAgency}
+		                    WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+

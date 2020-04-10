@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qualifi">
+	<resultMap type="UserVo.UserInfoQualifiVo" id="qualifiMap">
+		<result column="QUALIFI_IDX" property="qualifiIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="QUALIFI_NAME" property="qualifiName"/>
+		<result column="QUALIFI_GETDATE" property="qualifiGetdate"/>
+	</resultMap>
+	
+	<insert id="qualifiInsert" parameterType="UserVo.UserInfoQualifiVo">
+			insert into USER_INFO_QUALIFI(QUALIFI_IDX
+									  	 ,USER_IDX
+									  	 ,QUALIFI_NAME
+									   	 ,QUALIFI_GETDATE
+									 	 )
+								VALUES(
+										(select NVL(MAX(QUALIFI_IDX), 0)+1 from USER_INFO_QUALIFI)
+									   ,#{userIdx}
+									   ,#{qualifiName}
+									   ,#{qualifiGetdate}
+									  )
+	</insert>
+	
+	<select id="getQualifiDetailList" parameterType="int" resultMap="qualifiMap">
+		SELECT
+			QUALIFI_NAME
+			,to_char(QUALIFI_GETDATE, 'yyyy-mm-dd') as QUALIFI_GETDATE
+		FROM
+			user_info_qualifi
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="qualifiDelete" parameterType="int">
+		delete from USER_INFO_QUALIFI WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="qualifiUpdate" parameterType="UserVo.UserInfoQualifiVo">
+		update USER_INFO_QUALIFI set QUALIFI_NAME = #{qualifiName}
+                            		,QUALIFI_GETDATE = #{qualifiGetdate}
+                    WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="skill">
+	<resultMap type="UserVo.UserInfoSkillVo" id="skillMap">
+		<result column="SKILL_IDX" property="skillIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="SKILL_PROJECT_NAME" property="skillProjectName"/>
+		<result column="SKILL_STARTDATE" property="skillStartdate"/>
+		<result column="SKILL_ENDDATE" property="skillEnddate"/>
+		<result column="SKILL_CUSTOMER_COMP" property="skillCustomerComp"/>
+		<result column="SKILL_WORK_COMP" property="skillWorkComp"/>
+		<result column="SKILL_APPLIED" property="skillApplied"/>
+		<result column="SKILL_INDUSTRY" property="skillIndustry"/>
+		<result column="SKILL_ROLE" property="skillRole"/>
+		<result column="SKILL_MODEL" property="skillModel"/>
+		<result column="SKILL_OS" property="skillOs"/>
+		<result column="SKILL_LANG" property="skillLang"/>
+		<result column="SKILL_DBMS" property="skillDbms"/>
+		<result column="SKILL_COMM" property="skillComm"/>
+		<result column="SKILL_TOOL" property="skillTool"/>
+		<result column="SKILL_ETC" property="skillEtc"/>
+	</resultMap>
+	
+	<insert id="skillInsert" parameterType="UserVo.UserInfoSkillVo">
+		insert into USER_INFO_SKILL(SKILL_IDX
+								  	 ,USER_IDX
+								  	 ,SKILL_PROJECT_NAME
+								   	 ,SKILL_STARTDATE
+								  	 ,SKILL_ENDDATE
+								  	 ,SKILL_CUSTOMER_COMP
+								   	 ,SKILL_WORK_COMP
+								  	 ,SKILL_APPLIED
+								  	 ,SKILL_INDUSTRY
+								   	 ,SKILL_ROLE
+								   	 ,SKILL_MODEL
+								   	 ,SKILL_OS
+								   	 ,SKILL_LANG
+								   	 ,SKILL_DBMS
+								   	 ,SKILL_COMM
+								   	 ,SKILL_TOOL
+								   	 ,SKILL_ETC
+								 	 )
+							VALUES(
+									(select NVL(MAX(SKILL_IDX), 0)+1 from USER_INFO_SKILL)
+								   ,#{userIdx}
+								   ,#{skillProjectName}
+								   ,#{skillStartdate}
+								   ,#{skillEnddate}
+								   ,#{skillCustomerComp}
+								   ,#{skillWorkComp}
+								   ,#{skillApplied}
+								   ,#{skillIndustry}
+								   ,#{skillRole}
+								   ,#{skillModel}
+								   ,#{skillOs}
+								   ,#{skillLang}
+								   ,#{skillDbms}
+								   ,#{skillComm}
+								   ,#{skillTool}
+								   ,#{skillEtc}
+								  )
+	</insert>
+	
+	<select id="getSkillDetailList" parameterType="int" resultMap="skillMap">
+		SELECT    
+			SKILL_PROJECT_NAME
+			,to_char(SKILL_STARTDATE, 'yyyy-mm-dd') as SKILL_STARTDATE
+			,to_char(SKILL_ENDDATE, 'yyyy-mm-dd') as SKILL_ENDDATE
+			,SKILL_CUSTOMER_COMP
+			,SKILL_WORK_COMP
+			,SKILL_APPLIED
+			,SKILL_INDUSTRY
+			,SKILL_ROLE
+			,SKILL_MODEL
+			,SKILL_OS
+			,SKILL_LANG
+			,SKILL_DBMS
+			,SKILL_COMM
+			,SKILL_TOOL
+			,SKILL_ETC
+		FROM
+			user_info_skill
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="skillDelete" parameterType="int">
+		delete from USER_INFO_SKILL WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="skillUpdate" parameterType="UserVo.UserInfoSkillVo">
+		update USER_INFO_SKILL set SKILL_PROJECT_NAME = #{skillProjectName}
+		                          ,SKILL_STARTDATE = #{skillStartdate}
+		                          ,SKILL_ENDDATE = #{skillEnddate}
+		                          ,SKILL_CUSTOMER_COMP = #{skillCustomerComp}
+		                          ,SKILL_WORK_COMP = #{skillWorkComp}
+		                          ,SKILL_APPLIED = #{skillApplied}
+		                          ,SKILL_INDUSTRY = #{skillIndustry}
+		                          ,SKILL_ROLE = #{skillRole}
+		                          ,SKILL_MODEL = #{skillModel}
+		                          ,SKILL_OS = #{skillOs}
+		                          ,SKILL_LANG = #{skillLang}
+		                          ,SKILL_DBMS = #{skillDbms}
+		                          ,SKILL_COMM = #{skillComm}
+		                          ,SKILL_TOOL = #{skillTool}
+		                          ,SKILL_ETC = #{skillEtc}
+		                    WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+

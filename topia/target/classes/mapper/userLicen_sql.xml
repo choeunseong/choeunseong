@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="licen">
+	<resultMap type="UserVo.UserInfoLicenVo" id="licenMap">
+		<result column="LICEN_IDX" property="licenIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="LICEN_NAME" property="licenName"/>
+		<result column="LICEN_SKILL_LEVEL" property="licenSkillLevel"/>
+	</resultMap>
+	
+	<insert id="licenInsert" parameterType="UserVo.UserInfoLicenVo">
+		insert into USER_INFO_LICEN(LICEN_IDX
+								   ,USER_IDX
+								   ,LICEN_NAME
+								   ,LICEN_SKILL_LEVEL
+								 )
+						VALUES(
+								(select NVL(MAX(LICEN_IDX), 0)+1 from USER_INFO_LICEN)
+							   ,#{userIdx}
+							   ,#{licenName}
+							   ,#{licenSkillLevel}
+							  )
+	</insert>
+	
+	<select id="getLicenDetailList" parameterType="int" resultMap="licenMap">
+		SELECT
+			LICEN_NAME
+			,LICEN_SKILL_LEVEL
+		FROM
+			user_info_licen
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="licenDelete" parameterType="int">
+		delete from USER_INFO_LICEN WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="licenUpdate" parameterType="UserVo.UserInfoLicenVo">
+		update USER_INFO_LICEN set LICEN_NAME = #{licenName}
+                          		  ,LICEN_SKILL_LEVEL = #{licenSkillLevel}
+                    		WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+

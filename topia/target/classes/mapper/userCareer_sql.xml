@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="career">
+	<resultMap type="UserVo.UserInfoCareerVo" id="careerMap">
+		<result column="CAREER_IDX" property="careerIdx"/>
+		<result column="USER_IDX" property="userIdx"/>
+		<result column="CAREER_COMP_NAME" property="careerCompName"/>
+		<result column="CAREER_ENTER_DATE" property="careerEnterdate"/>
+		<result column="CAREER_LEAVEDATE" property="careerLeavedate"/>
+		<result column="CAREER_SPOT" property="careerSpot"/>
+		<result column="CAREER_RESPONSIB" property="careerResponsib"/>
+	</resultMap>
+	
+	<insert id="careerInsert" parameterType="UserVo.UserInfoCareerVo">
+		insert into USER_INFO_CAREER(CAREER_IDX
+									,USER_IDX
+									,CAREER_COMP_NAME
+									,CAREER_ENTERDATE
+									,CAREER_LEAVEDATE
+									,CAREER_SPOT
+									,CAREER_RESPONSIB
+									)
+							VALUES(
+									(select NVL(MAX(CAREER_IDX), 0)+1 from USER_INFO_CAREER)
+									,#{userIdx}
+									,#{careerCompName}
+									,#{careerEnterdate}
+									,#{careerLeavedate}
+									,#{careerSpot}
+									,#{careerResponsib}
+								   )
+	</insert>
+	
+	<select id="getCareerDetailList" parameterType="int" resultMap="careerMap">
+		SELECT
+			CAREER_COMP_NAME as careerCompName
+			,to_char(CAREER_ENTERDATE,'yyyy-mm-dd') as careerEnterdate
+			,to_char(CAREER_LEAVEDATE,'yyyy-mm-dd') as careerLeavedate
+			,CAREER_SPOT as careerSpot
+			,CAREER_RESPONSIB as careerResponsib
+		FROM
+			user_info_career
+		WHERE
+			user_idx = #{userIdx}
+	</select>
+	
+	<delete id="careerDelete" parameterType="int">
+		delete from USER_INFO_CAREER WHERE USER_IDX = #{userIdx}
+	</delete>
+	
+	<!-- <update id="careerUpdate" parameterType="UserVo.UserInfoCareerVo">
+		update USER_INFO_CAREER set CAREER_COMP_NAME = #{careerCompName}
+                           ,CAREER_ENTERDATE = #{careerEnterdate}
+                           ,CAREER_LEAVEDATE = #{careerLeavedate}
+                           ,CAREER_SPOT = #{careerSpot}
+                           ,CAREER_RESPONSIB = #{careerResponsib}
+                    WHERE USER_IDX = #{userIdx}
+	</update> -->
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
